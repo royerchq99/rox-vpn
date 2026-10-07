@@ -1,26 +1,26 @@
-# WireGuard para Roger, con wg-easy (interfaz web y codigos QR).
+# WireGuard para Roger, con wg-easy.
 #
-# Por que como "compose" y no como app normal de EasyPanel: una VPN necesita
-# permisos de red que el tipo "app" no deja poner (NET_ADMIN para levantar el
-# tunel, y dos ajustes del nucleo para que reenvie el trafico). Aqui si caben.
+# NO hay ningun secreto en este archivo, y por eso el repo puede ser publico:
+# EasyPanel solo lee el .env del repo para un compose (las variables que se ponen
+# en su pantalla NO llegan a la sustitucion ${...}, comprobado el 07/10), asi que
+# aqui no se usa ninguna variable.
 #
-# El panel web NO se publica al mundo: solo escucha en el propio servidor y se
-# llega por el dominio con HTTPS que pone EasyPanel delante. Lo unico abierto a
-# internet es el 51820/UDP, que es por donde entra la VPN.
+# El panel web va SIN contrasena a proposito, y es seguro porque **solo escucha
+# dentro del servidor** (127.0.0.1): desde internet no se llega. Para abrirlo se
+# hace un tunel: ssh -L 51821:127.0.0.1:51821 jarvis@2.24.65.16
+# Lo unico abierto a internet es el 51820/UDP, que es la VPN en si y se protege
+# con sus propias llaves, no con contrasena.
 services:
   wg-easy:
     image: ghcr.io/wg-easy/wg-easy:14
-    container_name: rox-vpn
     restart: unless-stopped
     environment:
-      - WG_HOST=${WG_HOST}
-      - PASSWORD=${PASSWORD}
+      - WG_HOST=2.24.65.16
       - WG_PORT=51820
-      - WG_DEFAULT_DNS=${WG_DEFAULT_DNS:-1.1.1.1}
+      - WG_DEFAULT_DNS=1.1.1.1
       - WG_DEFAULT_ADDRESS=10.8.0.x
       - WG_ALLOWED_IPS=0.0.0.0/0, ::/0
       - UI_TRAFFIC_STATS=true
-      - UI_CHART_TYPE=2
       - LANG=es
     volumes:
       - wg-datos:/etc/wireguard
