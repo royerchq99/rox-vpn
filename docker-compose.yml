@@ -22,6 +22,13 @@ services:
       - WG_ALLOWED_IPS=0.0.0.0/0, ::/0
       - UI_TRAFFIC_STATS=true
       - LANG=es
+      # Las cuatro primeras son las que trae wg-easy de serie (NAT y reenvio): si se
+      # define WG_POST_UP hay que repetirlas o la VPN deja de dar internet.
+      # La ULTIMA es la que se anade: cierra el panel de administracion desde DENTRO
+      # del tunel. Sin ella, quien tuviera un perfil .conf podria abrir
+      # http://10.8.0.1:51821 y crearse mas accesos, porque el panel no pide clave.
+      - WG_POST_UP=iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -I INPUT 1 -i wg0 -p tcp --dport 51821 -j REJECT
+      - WG_POST_DOWN=iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport 51820 -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -D INPUT -i wg0 -p tcp --dport 51821 -j REJECT
     volumes:
       - wg-datos:/etc/wireguard
     ports:
